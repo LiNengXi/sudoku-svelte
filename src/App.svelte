@@ -26,9 +26,7 @@
 	});
 
 	function copySudoku(sudoku) {
-		sudoku_copy = sudoku.map(rows => (rows.map(cell => {
-			return cell;
-		})));
+		sudoku_copy = sudoku.map(rows => rows.map(ele => ele));
 	}
 
 	function keydownHandler(rows_id, cell_id, e) {
@@ -66,28 +64,13 @@
 		val = val.slice(val.length - 1);
 		sudoku[rows_id][cell_id] = val;
 
-		let sudoku_t = translateNum(sudoku);
+		let sudoku_t = sudoku.map(rows => rows.map(ele => parseInt(ele)));
 		is_done = sudokuCore.checkSudoku(sudoku_t);
 
 		if (is_done) {
 			sudoku = sudoku_t;
 			usedTime.stop();
 		}
-	}
-
-	/**
-	 * translateNum 是为了配合 sudokucore 里的checkSudoku
-	 * 因为checkSudoku里判断用的 === 而非 ==
-	 * 完全可以改checkSudoku的 === 为 ==，用全等来判断是出于个人习惯
-	*/
-	function translateNum(sudoku) {
-		return sudoku.map(rows => (rows.map(cell => {
-			if (cell) {
-				return parseInt(cell);
-			}
-
-			return cell;
-		})));
 	}
 
 	function restartSudoku() {
