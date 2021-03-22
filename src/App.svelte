@@ -8,7 +8,7 @@
 
 	import { usedTime } from './store.js';
 
-	const DIFFICULTY = .5;
+	const DIFFICULTY = .95;
 
 	let sudoku = [],
 		sudoku_copy = [],
@@ -82,7 +82,7 @@
 	}
 
 	function resetSudoku() {
-		sudoku = sudokuCore.createBlankCell(sudokuCore.initSudoku(), curr_difficulty);
+		sudoku = sudokuCore.createBlankCell(sudokuCore.initializeSudoku(), curr_difficulty);
 		copySudoku(sudoku);
 		prev_difficulty = curr_difficulty;
 		is_done = false;
