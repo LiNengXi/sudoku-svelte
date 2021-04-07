@@ -4,14 +4,6 @@ const NOTREPEATROWS = [1, 2, 3, 4, 5, 6, 7, 8, 9];
 //  组成九个数字元素数组的循环步骤数
 const CELLGROUPCOUNTER = 3;
 
-function loopHandler(cb) {
-  for (let i = 0; i < LEN; i++) {
-      for (let j = 0; j < LEN; j++) {
-          cb(i, j);
-      }
-  }
-}
-
 class SudokuCore {
   constructor() {
     this.__sudoku = [];
@@ -37,24 +29,18 @@ class SudokuCore {
 
   rowGenerate() {
     this.__sudoku = Array.apply(null, { length: LEN }).map(() => {
-      return Array.apply(null, { length: LEN }).map(() => {
-        return '';
-      })
+      return Array.apply(null, { length: LEN }).map(() => '');
     });
   }
 
   setSteps(idx) {
-    let p;
-
     if (idx < CELLGROUPCOUNTER) {
-      p = 0;
+      return 0;
     } else if (idx < CELLGROUPCOUNTER * 2) {
-      p = CELLGROUPCOUNTER;
+      return CELLGROUPCOUNTER;
     } else if (idx < CELLGROUPCOUNTER * CELLGROUPCOUNTER) {
-      p = CELLGROUPCOUNTER * 2;
+      return CELLGROUPCOUNTER * 2;
     }
-
-    return p;
   }
 
   //  九宫格数组
@@ -72,72 +58,68 @@ class SudokuCore {
     return squareds;
   }
 
-  inRows(i) {
-    let sudoku = this.__sudoku,
-        row = [];
-    
-    for (let x = 0; x < LEN; x++) {
-      row.push(sudoku[i][x]);
-    }
-      
-    return row;
+  inRows(i, sudoku = this.__sudoku) {
+    return sudoku[i].slice();
   }
 
   inColumns(j, sudoku = this.__sudoku) {
-    let column = [];
-    
-    for (let x = 0; x < LEN; x++) {
-      column.push(sudoku[x][j]);
-    }
-      
-    return column;
+    return sudoku.map(ele => ele[j]);
   }
 
-  getRandomNumber() {
-    return Math.floor(Math.random() * LEN + 1);
-  }
-
-  checkNumber(rand, i, j) {
-    if (this.inRows(i).indexOf(rand) === -1 &&
-        this.inColumns(j).indexOf(rand) === -1 &&
-        this.inSquareds(i, j).indexOf(rand) === -1) {
-      
-      return rand;
-    }
-
-    return this.checkNumber(this.getRandomNumber(), i, j);
-  }
-
-  initializeSudoku() {
-    this.rowGenerate();
-    return this.renderSudoku();
-  }
-
-  //  因不会算法，通过try catch取巧完成数独的初始化生成
   renderSudoku() {
-    let sudoku = this.__sudoku,
-        _self = this;
+    this.rowGenerate();
+    let sudoku = this.__sudoku;
 
-    try {
-        loopHandler(function (i, j) {
-            let num = _self.checkNumber(_self.getRandomNumber(), i, j);
+    for (let i = 0; i < LEN; i++) {
+      let isReset = false;
+      for (let j = 0; j < LEN; j++) {
+        let rows = this.inRows(i),
+            columns = this.inColumns(j),
+            squareds = this.inSquareds(i, j),
+            intersection = [ ...new Set(rows.concat(columns, squareds)) ];  //  当前单元格所处行、列、九宫的交集数组
 
-            sudoku[i][j] = num;
-        });
+        if (intersection.length) {
+          /**
+           * avaliableComplement 为当前单元格交集数组相对 NOTREPEATROWS 的补集数组
+           * 通俗来说，剩下可用来填充当前单元格的随机数字集合
+           */
+          let avaliableComplement = NOTREPEATROWS.filter(ele => intersection.indexOf(ele) === -1),
+              len = avaliableComplement.length;
 
-        return sudoku;
-    } catch (e) {
-      return _self.initializeSudoku();
+          if (len) {
+            //  在可用数字集合里随机一个数字
+            sudoku[i][j] = avaliableComplement[ Math.floor(Math.random() * len) ];
+          } else {
+            // avaliableComplement 为空立即重置
+            isReset = true;
+            break;
+          }
+        } else {
+          //  开始 intersection 为空，随机产生一个数字
+          sudoku[i][j] = Math.floor(Math.random() * LEN + 1);
+        }
+      }
+
+      if (isReset) {
+        //  重置数独二维数组及循环变量
+        this.rowGenerate();
+        sudoku = this.__sudoku;
+        i = -1;   // i++ 之后为 0
+      }
     }
+
+    return sudoku;
   }
 
   //  此函数用来给数独随机留白以供玩家填空。
   createBlankCell(sudoku, difficulty) {
-    loopHandler(function (i, j) {
-      if (Math.random() > difficulty) {
-        sudoku[i][j] = '';
+    for (let i = 0; i < LEN; i++) {
+      for (let j = 0; j < LEN; j++) {
+        if (Math.random() > difficulty) {
+          sudoku[i][j] = '';
+        }
       }
-    });
+    }
   
     return sudoku;
   }
